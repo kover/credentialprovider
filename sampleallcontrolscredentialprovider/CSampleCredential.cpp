@@ -79,7 +79,7 @@ HRESULT CSampleCredential::Initialize(
     }
     if (SUCCEEDED(hr))
     {
-        hr = SHStrDupW(L"Edit Text", &_rgFieldStrings[SFI_EDIT_TEXT]);
+        hr = SHStrDupW(L"developer", &_rgFieldStrings[SFI_EDIT_TEXT]);
     }
     if (SUCCEEDED(hr))
     {

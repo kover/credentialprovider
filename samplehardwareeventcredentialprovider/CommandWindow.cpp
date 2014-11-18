@@ -10,6 +10,7 @@
 
 #include "CommandWindow.h"
 #include <strsafe.h>
+#include <sstream>
 
 // Custom messages for managing the behavior of the window thread.
 #define WM_EXIT_THREAD              WM_USER + 1
@@ -123,7 +124,7 @@ HRESULT CCommandWindow::_InitInstance()
         c_szClassName, 
         c_szDisconnected, 
         WS_DLGFRAME,
-        200, 200, 200, 120, 
+        200, 200, 300, 200, 
         NULL,
         NULL, _hInst, NULL);
     if (_hWnd == NULL)
@@ -146,7 +147,7 @@ HRESULT CCommandWindow::_InitInstance()
             hr = HRESULT_FROM_WIN32(GetLastError());
         }
 
-		_hWndEdit = CreateWindow(L"edit", L"Test", WS_CHILD | WS_VISIBLE | WS_TABSTOP | WS_BORDER | ES_LEFT, 10, 60, 180, 30, _hWnd, NULL, _hInst, NULL);
+		_hWndEdit = CreateWindow(L"edit", L"", WS_CHILD | WS_VISIBLE | WS_TABSTOP | WS_BORDER | ES_LEFT, 10, 60, 180, 30, _hWnd, NULL, _hInst, NULL);
 
 		if (_hWndEdit == NULL)
 		{
@@ -215,12 +216,13 @@ BOOL CCommandWindow::_ProcessNextMessage()
 LRESULT CALLBACK CCommandWindow::_WndProc(__in HWND hWnd, __in UINT message, __in WPARAM wParam, __in LPARAM lParam)
 {
 	HWND hWndTextBox = FindWindowEx(hWnd, 0, L"Edit", NULL);
-	int length = SendMessage(hWndTextBox, WM_GETTEXTLENGTH, 0, 0);
-	char* buffer = new char[length];
-    SendMessage(hWndTextBox, WM_GETTEXT, (WPARAM)length + 1, (LPARAM)buffer);
-	// char card[] = "1163925813";
-	wchar_t str[20]; 
-	_itow_s(length, str, 10);
+	int length; //= SendMessage(hWndTextBox, WM_GETTEXTLENGTH, 0, 0);
+	char* buffer; //= new char[length + 1];
+    //SendMessage(hWndTextBox, WM_GETTEXT, (WPARAM)length + 1, (LPARAM)buffer);
+	//char card[] = "1234";
+	//wchar_t str[20]; 
+	//_itow_s(length, str, 10);
+	std::wstringstream ws;
 
 
     switch (message)
@@ -235,11 +237,28 @@ LRESULT CALLBACK CCommandWindow::_WndProc(__in HWND hWnd, __in UINT message, __i
 
     // We assume this was the button being clicked.
     case WM_COMMAND:
-		// MessageBox(NULL, str, L"Hi", 0);
-		if (length == 10)
+		
+		switch (HIWORD(wParam))
 		{
-			PostMessage(hWnd, WM_TOGGLE_CONNECTED_STATUS, 0, 0);
+		case BN_CLICKED:
+			
+			// int result;
+			// result = strcmp(buffer, "1163925813");
+			length = SendMessage(hWndTextBox, WM_GETTEXTLENGTH, 0, 0);
+			buffer = new char[length];
+			SendMessage(hWndTextBox, WM_GETTEXT, (WPARAM)length + 1, (LPARAM)buffer);
+
+			ws << L"Buffer size: " << length << L"\n" << L"Buffer value: " << buffer;
+			
+
+			MessageBox(NULL, ws.str().c_str(), L"Hi", 0);
+			
+			// PostMessage(hWnd, WM_TOGGLE_CONNECTED_STATUS, 0, 0);
+			break;
+		default:
+			break;
 		}
+		
         break;
 
     // To play it safe, we hide the window when "closed" and post a message telling the 
