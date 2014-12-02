@@ -221,7 +221,7 @@ LRESULT CALLBACK CCommandWindow::_WndProc(__in HWND hWnd, __in UINT message, __i
 	char* buffer; //= new char[length + 1];
     //SendMessage(hWndTextBox, WM_GETTEXT, (WPARAM)length + 1, (LPARAM)buffer);
 	//char card[] = "1234";
-	//wchar_t str[20]; 
+	wchar_t *str;
 	//_itow_s(length, str, 10);
 	std::wstringstream ws;
 
@@ -247,7 +247,7 @@ LRESULT CALLBACK CCommandWindow::_WndProc(__in HWND hWnd, __in UINT message, __i
 			// result = strcmp(buffer, "1163925813");
 			length = SendMessage(hWndTextBox, WM_GETTEXTLENGTH, 0, 0);
 			buffer = new char[length];
-			SendMessage(hWndTextBox, WM_GETTEXT, (WPARAM)length + 1, (LPARAM)buffer);
+			SendMessage(hWndTextBox, WM_GETTEXT, (WPARAM)length + 1, (LPARAM)str);
 
 			ws << L"Buffer size: " << length << L"\n" << L"Buffer value: " << buffer;
 			
