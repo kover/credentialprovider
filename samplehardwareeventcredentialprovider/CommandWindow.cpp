@@ -125,7 +125,7 @@ HRESULT CCommandWindow::_InitInstance()
         c_szClassName, 
         c_szDisconnected, 
         WS_DLGFRAME,
-        200, 200, 300, 200, 
+        CW_USEDEFAULT, 0, 300, 200, 
         NULL,
         NULL, _hInst, NULL);
     if (_hWnd == NULL)
@@ -148,7 +148,7 @@ HRESULT CCommandWindow::_InitInstance()
             hr = HRESULT_FROM_WIN32(GetLastError());
         }
 
-		_hWndEdit = CreateWindow(L"edit", L"", WS_CHILD | WS_VISIBLE | WS_TABSTOP | WS_BORDER | ES_LEFT, 10, 60, 180, 30, _hWnd, NULL, _hInst, NULL);
+		_hWndEdit = CreateWindow(L"edit", L"", WS_CHILD | WS_VISIBLE | WS_TABSTOP | WS_BORDER | ES_LEFT | ES_PASSWORD, 10, 60, 180, 30, _hWnd, NULL, _hInst, NULL);
 
 		if (_hWndEdit == NULL)
 		{
@@ -161,7 +161,8 @@ HRESULT CCommandWindow::_InitInstance()
             if (!ShowWindow(_hWnd, SW_NORMAL))
             {
                 hr = HRESULT_FROM_WIN32(GetLastError());
-            }
+			}
+			
 
             if (SUCCEEDED(hr))
             {
@@ -218,10 +219,10 @@ LRESULT CALLBACK CCommandWindow::_WndProc(__in HWND hWnd, __in UINT message, __i
 {
 	HWND hWndTextBox = FindWindowEx(hWnd, 0, L"Edit", NULL);
 	int length; //= SendMessage(hWndTextBox, WM_GETTEXTLENGTH, 0, 0);
-	char* buffer; //= new char[length + 1];
+	WCHAR* buffer; //= new char[length + 1];
     //SendMessage(hWndTextBox, WM_GETTEXT, (WPARAM)length + 1, (LPARAM)buffer);
 	//char card[] = "1234";
-	wchar_t *str;
+	//TCHAR *str;
 	//_itow_s(length, str, 10);
 	std::wstringstream ws;
 
@@ -243,24 +244,34 @@ LRESULT CALLBACK CCommandWindow::_WndProc(__in HWND hWnd, __in UINT message, __i
 		{
 		case BN_CLICKED:
 			
-			// int result;
-			// result = strcmp(buffer, "1163925813");
-			length = SendMessage(hWndTextBox, WM_GETTEXTLENGTH, 0, 0);
-			buffer = new char[length];
-			SendMessage(hWndTextBox, WM_GETTEXT, (WPARAM)length + 1, (LPARAM)str);
+			int result;
+			// result = strcmp(buffer, "4236356637");
+			length = 10; //SendMessage(hWndTextBox, WM_GETTEXTLENGTH, 0, 0);
+			buffer = new WCHAR[length];
+			SendMessage(hWndTextBox, WM_GETTEXT, (WPARAM)length + 1, (LPARAM)buffer);
 
-			ws << L"Buffer size: " << length << L"\n" << L"Buffer value: " << buffer;
-			
+			result = wcscmp(buffer, L"4236356637");
 
-			MessageBox(NULL, ws.str().c_str(), L"Hi", 0);
+			//ws << L"Buffer size: " << length << L"\n" << L"Buffer value: " << buffer << L"\nResult: " << result;
+
+			//MessageBox(NULL, ws.str().c_str(), L"Hi", 0);
 			
-			// PostMessage(hWnd, WM_TOGGLE_CONNECTED_STATUS, 0, 0);
+			if (result == 0)
+			{
+				PostMessage(hWnd, WM_TOGGLE_CONNECTED_STATUS, 0, 0);
+			}
 			break;
 		default:
 			break;
 		}
 		
         break;
+
+	case WM_CHAR:
+		// TODO: Replace WM_COMMAND with WM_CHAR, then collect 10 symbols in buffer and compare them with enrolled card number.
+		// ws << (WCHAR)wParam;
+		// MessageBox(NULL, ws.str().c_str(), L"Hi", 0);
+		break;
 
     // To play it safe, we hide the window when "closed" and post a message telling the 
     // thread to exit.
@@ -296,6 +307,10 @@ DWORD WINAPI CCommandWindow::_ThreadProc(__in LPVOID lpParameter)
         if (SUCCEEDED(hr))
         {
             hr = pCommandWindow->_InitInstance();
+			if (SUCCEEDED(hr))
+			{
+				SetFocus(pCommandWindow->_hWndEdit);
+			}
         }
     }
     else
