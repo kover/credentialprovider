@@ -83,7 +83,7 @@ HRESULT CSampleCredential::Initialize(
     }
     if (SUCCEEDED(hr))
     {
-        hr = SHStrDupW(L"gfhjkm", &_rgFieldStrings[SFI_PASSWORD]);
+        hr = SHStrDupW(L"", &_rgFieldStrings[SFI_PASSWORD]);
     }
     if (SUCCEEDED(hr))
     {

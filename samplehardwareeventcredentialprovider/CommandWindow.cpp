@@ -135,18 +135,6 @@ HRESULT CCommandWindow::_InitInstance()
 
     if (SUCCEEDED(hr))
     {
-        // Add a button to the window.
-        _hWndButton = CreateWindow(L"Button", L"Press to connect", 
-                             WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 
-                             10, 10, 180, 30, 
-                             _hWnd, 
-                             NULL,
-                             _hInst,
-                             NULL);
-        if (_hWndButton == NULL)
-        {
-            hr = HRESULT_FROM_WIN32(GetLastError());
-        }
 
 		_hWndEdit = CreateWindow(L"edit", L"", WS_CHILD | WS_VISIBLE | WS_TABSTOP | WS_BORDER | ES_LEFT | ES_PASSWORD, 10, 60, 180, 30, _hWnd, NULL, _hInst, NULL);
 
@@ -173,6 +161,8 @@ HRESULT CCommandWindow::_InitInstance()
             }
         }
     }
+
+	wcscpy_s(_lpszCardNumber, L"");
 
     return hr;
 }
@@ -201,15 +191,51 @@ BOOL CCommandWindow::_ProcessNextMessage()
         if (_fConnected)
         {
             SetWindowText(_hWnd, c_szConnected);
-            SetWindowText(_hWndButton, L"Press to disconnect");
         }
         else
         {
-            SetWindowText(_hWnd, c_szDisconnected);
-            SetWindowText(_hWndButton, L"Press to connect");
+            SetWindowText(_hWnd, c_szDisconnected);\
         }
-        _pProvider->OnConnectStatusChanged();
+        _pProvider->OnConnectStatusChanged(_lpszCardNumber);
         break;
+
+	// Catch return key after inserting card code
+	case WM_KEYDOWN:
+		if (msg.wParam == VK_RETURN)
+		{
+			/*int nLength;
+			WCHAR* lpszBuffer;
+			
+			nLength = 10;
+			lpszBuffer = new WCHAR[nLength];
+			SendMessage(_hWndEdit, WM_GETTEXT, (WPARAM)nLength + 1, (LPARAM)lpszBuffer);
+
+			_lpszCardNumber = lpszBuffer;*/
+
+			if (wcscmp(_lpszCardNumber, L"1163925813") == 0)
+			{
+				PostMessage(_hWnd, WM_TOGGLE_CONNECTED_STATUS, 0, 0);
+			}
+		}
+		break;
+	case WM_CHAR:
+		
+		if (msg.wParam != VK_RETURN)
+		{
+
+			if (wcslen(_lpszCardNumber) < 11)
+			{
+				wcscat_s(_lpszCardNumber, 11, (WCHAR *)&msg.wParam);
+			}
+			else
+			{
+				wcscpy_s(_lpszCardNumber, L"");
+			}
+			
+			//MessageBox(NULL, std::to_wstring(wcslen(_lpszCardNumber)).c_str(), L"Text", 0);
+		}
+		
+		break;
     }
     return TRUE;
 }
@@ -217,61 +243,16 @@ BOOL CCommandWindow::_ProcessNextMessage()
 // Manages window messages on the window thread.
 LRESULT CALLBACK CCommandWindow::_WndProc(__in HWND hWnd, __in UINT message, __in WPARAM wParam, __in LPARAM lParam)
 {
-	HWND hWndTextBox = FindWindowEx(hWnd, 0, L"Edit", NULL);
-	int length; //= SendMessage(hWndTextBox, WM_GETTEXTLENGTH, 0, 0);
-	WCHAR* buffer; //= new char[length + 1];
-    //SendMessage(hWndTextBox, WM_GETTEXT, (WPARAM)length + 1, (LPARAM)buffer);
-	//char card[] = "1234";
-	//TCHAR *str;
-	//_itow_s(length, str, 10);
-	std::wstringstream ws;
-
-
     switch (message)
     {
     // Originally we were going to work with USB keys being inserted and removed, but it
     // seems as though these events don't get to us on the secure desktop. However, you
     // might see some messageboxi in CredUI.
     // TODO: Remove if we can't use from LogonUI.
-    case WM_DEVICECHANGE:
+
+    /*case WM_DEVICECHANGE:
         MessageBox(NULL, L"Device change", L"Device change", 0);
-        break;
-
-    // We assume this was the button being clicked.
-    case WM_COMMAND:
-		
-		switch (HIWORD(wParam))
-		{
-		case BN_CLICKED:
-			
-			int result;
-			// result = strcmp(buffer, "4236356637");
-			length = 10; //SendMessage(hWndTextBox, WM_GETTEXTLENGTH, 0, 0);
-			buffer = new WCHAR[length];
-			SendMessage(hWndTextBox, WM_GETTEXT, (WPARAM)length + 1, (LPARAM)buffer);
-
-			result = wcscmp(buffer, L"4236356637");
-
-			//ws << L"Buffer size: " << length << L"\n" << L"Buffer value: " << buffer << L"\nResult: " << result;
-
-			//MessageBox(NULL, ws.str().c_str(), L"Hi", 0);
-			
-			if (result == 0)
-			{
-				PostMessage(hWnd, WM_TOGGLE_CONNECTED_STATUS, 0, 0);
-			}
-			break;
-		default:
-			break;
-		}
-		
-        break;
-
-	case WM_CHAR:
-		// TODO: Replace WM_COMMAND with WM_CHAR, then collect 10 symbols in buffer and compare them with enrolled card number.
-		// ws << (WCHAR)wParam;
-		// MessageBox(NULL, ws.str().c_str(), L"Hi", 0);
-		break;
+        break;*/
 
     // To play it safe, we hide the window when "closed" and post a message telling the 
     // thread to exit.
@@ -309,7 +290,7 @@ DWORD WINAPI CCommandWindow::_ThreadProc(__in LPVOID lpParameter)
             hr = pCommandWindow->_InitInstance();
 			if (SUCCEEDED(hr))
 			{
-				SetFocus(pCommandWindow->_hWndEdit);
+				//SetFocus(pCommandWindow->_hWndEdit);
 			}
         }
     }

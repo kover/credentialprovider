@@ -52,12 +52,17 @@ CSampleProvider::~CSampleProvider()
 
 // This method acts as a callback for the hardware emulator. When it's called, it simply
 // tells the infrastructure that it needs to re-enumerate the credentials.
-void CSampleProvider::OnConnectStatusChanged()
+void CSampleProvider::OnConnectStatusChanged(__in WCHAR *lpszCardNumber)
 {
-    if (_pcpe != NULL)
-    {
-        _pcpe->CredentialsChanged(_upAdviseContext);
-    }
+	if (wcscmp(lpszCardNumber, L"1163925813") == 0)
+	{
+		_pCredential->SetStringValue(SFI_PASSWORD, L"gfhjkm");
+		if (_pcpe != NULL)
+		{
+			_pcpe->CredentialsChanged(_upAdviseContext);
+		}
+	}
+    
 }
 
 // SetUsageScenario is the provider's cue that it's going to be asked for tiles
