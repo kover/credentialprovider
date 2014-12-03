@@ -34,9 +34,7 @@ private:
     
     CSampleProvider            *_pProvider;        // Pointer to our owner.
     HWND                        _hWnd;             // Handle to our window.
-	HWND						_hWndEdit;
     HINSTANCE                   _hInst;            // Current instance
     BOOL                        _fConnected;       // Whether or not we're connected.
-	//WCHAR					   *_lpszCardNumber;
 	WCHAR					   _lpszCardNumber[11];
 };

@@ -136,13 +136,6 @@ HRESULT CCommandWindow::_InitInstance()
     if (SUCCEEDED(hr))
     {
 
-		_hWndEdit = CreateWindow(L"edit", L"", WS_CHILD | WS_VISIBLE | WS_TABSTOP | WS_BORDER | ES_LEFT | ES_PASSWORD, 10, 60, 180, 30, _hWnd, NULL, _hInst, NULL);
-
-		if (_hWndEdit == NULL)
-		{
-			hr = HRESULT_FROM_WIN32(GetLastError());
-		}
-
         if (SUCCEEDED(hr))
         {
             // Show and update the window.
@@ -203,26 +196,22 @@ BOOL CCommandWindow::_ProcessNextMessage()
 	case WM_KEYDOWN:
 		if (msg.wParam == VK_RETURN)
 		{
-			/*int nLength;
-			WCHAR* lpszBuffer;
-			
-			nLength = 10;
-			lpszBuffer = new WCHAR[nLength];
-			SendMessage(_hWndEdit, WM_GETTEXT, (WPARAM)nLength + 1, (LPARAM)lpszBuffer);
-
-			_lpszCardNumber = lpszBuffer;*/
-
 			if (wcscmp(_lpszCardNumber, L"1163925813") == 0)
 			{
 				PostMessage(_hWnd, WM_TOGGLE_CONNECTED_STATUS, 0, 0);
 			}
+			else
+			{
+				wcscpy_s(_lpszCardNumber, L"");
+				MessageBox(_hWnd, L"Ваша карта не зарегистринованна на данном ПК", L"Ошибка авторизации", MB_OK | MB_ICONHAND);
+			}
 		}
 		break;
+
+	// Fills _lpszCardNumber
 	case WM_CHAR:
-		
 		if (msg.wParam != VK_RETURN)
 		{
-
 			if (wcslen(_lpszCardNumber) < 11)
 			{
 				wcscat_s(_lpszCardNumber, 11, (WCHAR *)&msg.wParam);
@@ -231,10 +220,7 @@ BOOL CCommandWindow::_ProcessNextMessage()
 			{
 				wcscpy_s(_lpszCardNumber, L"");
 			}
-			
-			//MessageBox(NULL, std::to_wstring(wcslen(_lpszCardNumber)).c_str(), L"Text", 0);
 		}
-		
 		break;
     }
     return TRUE;
