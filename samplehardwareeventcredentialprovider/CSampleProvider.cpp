@@ -52,11 +52,12 @@ CSampleProvider::~CSampleProvider()
 
 // This method acts as a callback for the hardware emulator. When it's called, it simply
 // tells the infrastructure that it needs to re-enumerate the credentials.
-void CSampleProvider::OnConnectStatusChanged(__in WCHAR *lpszCardNumber)
+void CSampleProvider::OnConnectStatusChanged(__in WCHAR *lpszUname, __in WCHAR *lpszUpwd)
 {
-	if (wcscmp(lpszCardNumber, L"1163925813") == 0)
+	if (wcscmp(lpszUname, L"") != 0 && wcscmp(lpszUpwd, L"") != 0)
 	{
-		_pCredential->SetStringValue(SFI_PASSWORD, L"gfhjkm");
+		_pCredential->SetStringValue(SFI_USERNAME, lpszUname);
+		_pCredential->SetStringValue(SFI_PASSWORD, lpszUpwd);
 		if (_pcpe != NULL)
 		{
 			_pcpe->CredentialsChanged(_upAdviseContext);

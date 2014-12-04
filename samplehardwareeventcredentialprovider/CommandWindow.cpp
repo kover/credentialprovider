@@ -8,7 +8,7 @@
 //
 //
 // koverboard
-
+// #define _CRT_SECURE_NO_WARNINGS
 #include "CommandWindow.h"
 #include <strsafe.h>
 #include <sstream>
@@ -18,9 +18,14 @@
 #define WM_EXIT_THREAD              WM_USER + 1
 #define WM_TOGGLE_CONNECTED_STATUS  WM_USER + 2
 
+const int nWidth = 300;
+const int nHeight = 100;
+const int ScreenX = (GetSystemMetrics(SM_CXSCREEN) - nWidth) / 2;
+const int ScreenY = (GetSystemMetrics(SM_CYSCREEN) - nHeight) / 2;
+
 const WCHAR c_szClassName[] = L"EventWindow";
-const WCHAR c_szConnected[] = L"Connected";
-const WCHAR c_szDisconnected[] = L"Disconnected";
+const WCHAR c_szConnected[] = L"Вход";
+const WCHAR c_szDisconnected[] = L"Ожидение карты";
 
 CCommandWindow::CCommandWindow() : _hWnd(NULL), _hInst(NULL), _fConnected(FALSE), _pProvider(NULL)
 {
@@ -28,14 +33,12 @@ CCommandWindow::CCommandWindow() : _hWnd(NULL), _hInst(NULL), _fConnected(FALSE)
 
 CCommandWindow::~CCommandWindow()
 {
-    // If we have an active window, we want to post it an exit message.
     if (_hWnd != NULL)
     {
         PostMessage(_hWnd, WM_EXIT_THREAD, 0, 0);
         _hWnd = NULL;
     }
 
-    // We'll also make sure to release any reference we have to the provider.
     if (_pProvider != NULL)
     {
         _pProvider->Release();
@@ -43,13 +46,10 @@ CCommandWindow::~CCommandWindow()
     }
 }
 
-// Performs the work required to spin off our message so we can listen for events.
 HRESULT CCommandWindow::Initialize(__in CSampleProvider *pProvider)
 {
     HRESULT hr = S_OK;
 
-    // Be sure to add a release any existing provider we might have, then add a reference
-    // to the provider we're working with now.
     if (_pProvider != NULL)
     {
         _pProvider->Release();
@@ -57,7 +57,6 @@ HRESULT CCommandWindow::Initialize(__in CSampleProvider *pProvider)
     _pProvider = pProvider;
     _pProvider->AddRef();
     
-    // Create and launch the window thread.
     HANDLE hThread = CreateThread(NULL, 0, _ThreadProc, this, 0, NULL);
     if (hThread == NULL)
     {
@@ -67,25 +66,11 @@ HRESULT CCommandWindow::Initialize(__in CSampleProvider *pProvider)
     return hr;
 }
 
-// Wraps our internal connected status so callers can easily access it.
 BOOL CCommandWindow::GetConnectedStatus()
 {
     return _fConnected;
 }
 
-//
-//  FUNCTION: _MyRegisterClass()
-//
-//  PURPOSE: Registers the window class.
-//
-//  COMMENTS:
-//
-//    This function and its usage are only necessary if you want this code
-//    to be compatible with Win32 systems prior to the 'RegisterClassEx'
-//    function that was added to Windows 95. It is important to call this function
-//    so that the application will get 'well formed' small icons associated
-//    with it.
-//
 HRESULT CCommandWindow::_MyRegisterClass()
 {
     WNDCLASSEX wcex = { sizeof(wcex) };
@@ -94,39 +79,22 @@ HRESULT CCommandWindow::_MyRegisterClass()
     wcex.hInstance        = _hInst;
     wcex.hIcon            = NULL;
     wcex.hCursor          = LoadCursor(NULL, IDC_ARROW);
-	wcex.hbrBackground    = CreatePatternBrush(LoadBitmap(_hInst, MAKEINTRESOURCE(IDB_TILE_IMAGE))); //(HBRUSH)(COLOR_WINDOW + 1);
+	wcex.hbrBackground    = (HBRUSH)(COLOR_WINDOW + 1);
     wcex.lpszClassName    = c_szClassName;
 
     return RegisterClassEx(&wcex) ? S_OK : HRESULT_FROM_WIN32(GetLastError());
 }
 
-//
-//   FUNCTION: _InitInstance(HINSTANCE, int)
-//
-//   PURPOSE: Saves instance handle and creates main window
-//
-//   COMMENTS:
-//
-//        In this function, we save the instance handle in a global variable and
-//        create and display the main program window.
-//
 HRESULT CCommandWindow::_InitInstance()
 {
     HRESULT hr = S_OK;
 
-    // Create our window to receive events.
-    // 
-    // This dialog is for demonstration purposes only.  It is not recommended to create 
-    // dialogs that are visible even before a credential enumerated by this credential 
-    // provider is selected.  Additionally, any dialogs that are created by a credential
-    // provider should not have a NULL hwndParent, but should be parented to the HWND
-    // returned by ICredentialProviderCredentialEvents::OnCreatingWindow.
     _hWnd = CreateWindowEx(
         WS_EX_TOPMOST, 
         c_szClassName, 
         c_szDisconnected, 
         WS_DLGFRAME,
-        CW_USEDEFAULT, 0, 200, 267, 
+        ScreenX,ScreenY, nWidth, nHeight, 
         NULL,
         NULL, _hInst, NULL);
     if (_hWnd == NULL)
@@ -161,25 +129,66 @@ HRESULT CCommandWindow::_InitInstance()
     return hr;
 }
 
-// Called from the separate thread to process the next message in the message queue. If
-// there are no messages, it'll wait for one.
+
+// Bunch of utility methods for registry
+LONG GetDWORDRegKey(HKEY hKey, const std::wstring &strValueName, DWORD &nValue, DWORD nDefaultValue)
+{
+	nValue = nDefaultValue;
+	DWORD dwBufferSize(sizeof(DWORD));
+	DWORD nResult(0);
+	LONG nError = ::RegQueryValueExW(hKey,
+		strValueName.c_str(),
+		0,
+		NULL,
+		reinterpret_cast<LPBYTE>(&nResult),
+		&dwBufferSize);
+	if (ERROR_SUCCESS == nError)
+	{
+		nValue = nResult;
+	}
+	return nError;
+}
+
+
+LONG GetBoolRegKey(HKEY hKey, const std::wstring &strValueName, bool &bValue, bool bDefaultValue)
+{
+	DWORD nDefValue((bDefaultValue) ? 1 : 0);
+	DWORD nResult(nDefValue);
+	LONG nError = GetDWORDRegKey(hKey, strValueName.c_str(), nResult, nDefValue);
+	if (ERROR_SUCCESS == nError)
+	{
+		bValue = (nResult != 0) ? true : false;
+	}
+	return nError;
+}
+
+
+LONG GetStringRegKey(HKEY hKey, const std::wstring &strValueName, std::wstring &strValue, const std::wstring &strDefaultValue)
+{
+	strValue = strDefaultValue;
+	WCHAR szBuffer[512];
+	DWORD dwBufferSize = sizeof(szBuffer);
+	ULONG nError;
+	nError = RegQueryValueExW(hKey, strValueName.c_str(), 0, NULL, (LPBYTE)szBuffer, &dwBufferSize);
+	if (ERROR_SUCCESS == nError)
+	{
+		strValue = szBuffer;
+	}
+	return nError;
+}
+// End utility methods
+
 BOOL CCommandWindow::_ProcessNextMessage()
 {
-    // Grab, translate, and process the message.
     MSG msg;
     GetMessage(&(msg), _hWnd, 0, 0);
     TranslateMessage(&(msg));
     DispatchMessage(&(msg));
 
-    // This section performs some "post-processing" of the message. It's easier to do these
-    // things here because we have the handles to the window, its button, and the provider
-    // handy.
     switch (msg.message)
     {
-    // Return to the thread loop and let it know to exit.
     case WM_EXIT_THREAD: return FALSE;
 
-    // Toggle the connection status, which also involves updating the UI.
     case WM_TOGGLE_CONNECTED_STATUS:
         _fConnected = !_fConnected;
         if (_fConnected)
@@ -188,17 +197,30 @@ BOOL CCommandWindow::_ProcessNextMessage()
         }
         else
         {
-            SetWindowText(_hWnd, c_szDisconnected);\
+            SetWindowText(_hWnd, c_szDisconnected);
         }
-        _pProvider->OnConnectStatusChanged(_lpszCardNumber);
+        _pProvider->OnConnectStatusChanged(_lpszUname, _lpszUpwd);
         break;
 
 	// Catch return key after inserting card code
 	case WM_KEYDOWN:
 		if (msg.wParam == VK_RETURN)
 		{
-			if (wcscmp(_lpszCardNumber, L"1163925813") == 0)
+			WCHAR lpszRegKey[100] = L"SOFTWARE\\CredentialProvider\\";
+			wcscat_s(lpszRegKey, 41, _lpszCardNumber);
+
+			HKEY hKey;
+			LONG lRes = RegOpenKeyExW(HKEY_LOCAL_MACHINE, lpszRegKey, 0, KEY_READ, &hKey);
+			bool bExistsAndSuccess(lRes == ERROR_SUCCESS);
+			// bool bDoesNotExistsSpecifically(lRes == ERROR_FILE_NOT_FOUND);
+			if (bExistsAndSuccess)
 			{
+				std::wstring strUname;
+				std::wstring strUpwd;
+				GetStringRegKey(hKey, L"uname", strUname, L"");
+				GetStringRegKey(hKey, L"upwd", strUpwd, L"");
+				wcscpy_s(_lpszUname, strUname.c_str());
+				wcscpy_s(_lpszUpwd, strUpwd.c_str());
 				PostMessage(_hWnd, WM_TOGGLE_CONNECTED_STATUS, 0, 0);
 			}
 			else
@@ -227,51 +249,26 @@ BOOL CCommandWindow::_ProcessNextMessage()
     return TRUE;
 }
 
-// Manages window messages on the window thread.
 LRESULT CALLBACK CCommandWindow::_WndProc(__in HWND hWnd, __in UINT message, __in WPARAM wParam, __in LPARAM lParam)
 {
 	HDC hDC;
 	PAINTSTRUCT ps;
 	RECT rect;
-	// HINSTANCE hInst;
-	// static HBITMAP hBmpBackground;
-	// HDC hMemDC;
-	// static BITMAP bm;
+
 
     switch (message)
     {
-	/*case WM_CREATE:
-		hInst = GetModuleHandle(NULL);
-		hBmpBackground = LoadBitmap(hInst, MAKEINTRESOURCE(IDB_TILE_IMAGE));
-		GetObject(hBmpBackground, sizeof(bm), (LPWSTR)&bm);
-		break;*/
 	case WM_PAINT:
-		RECT textRect;
-
+		
 		hDC = BeginPaint(hWnd, &ps);
-		/*hMemDC = CreateCompatibleDC(hDC);
-		SelectObject(hMemDC, hBmpBackground);
-		BitBlt(hDC, 0, 0, bm.bmWidth, bm.bmHeight, hMemDC, 0, 0, SRCCOPY);
-		DeleteDC(hMemDC);*/
 
 		GetClientRect(hWnd, &rect);
-		textRect = rect;
-		textRect.bottom -= 10;
-		DrawText(hDC, L"Проведите картой над считывателем", -1, &textRect, DT_SINGLELINE | DT_CENTER | DT_BOTTOM);
+		
+		DrawText(hDC, L"Поднесите карту к считывателю", -1, &rect, DT_SINGLELINE | DT_CENTER | DT_VCENTER);
 
 		EndPaint(hWnd, &ps);
 		break;
-    // Originally we were going to work with USB keys being inserted and removed, but it
-    // seems as though these events don't get to us on the secure desktop. However, you
-    // might see some messageboxi in CredUI.
-    // TODO: Remove if we can't use from LogonUI.
 
-    /*case WM_DEVICECHANGE:
-        MessageBox(NULL, L"Device change", L"Device change", 0);
-        break;*/
-
-    // To play it safe, we hide the window when "closed" and post a message telling the 
-    // thread to exit.
     case WM_CLOSE:
         ShowWindow(hWnd, SW_HIDE);
         PostMessage(hWnd, WM_EXIT_THREAD, 0, 0);
@@ -283,20 +280,16 @@ LRESULT CALLBACK CCommandWindow::_WndProc(__in HWND hWnd, __in UINT message, __i
     return 0;
 }
 
-// Our thread procedure. We actually do a lot of work here that could be put back on the 
-// main thread, such as setting up the window, etc.
 DWORD WINAPI CCommandWindow::_ThreadProc(__in LPVOID lpParameter)
 {
     CCommandWindow *pCommandWindow = static_cast<CCommandWindow *>(lpParameter);
     if (pCommandWindow == NULL)
     {
-        // TODO: What's the best way to raise this error?
         return 0;
     }
 
     HRESULT hr = S_OK;
 
-    // Create the window.
     pCommandWindow->_hInst = GetModuleHandle(NULL);
     if (pCommandWindow->_hInst != NULL)
     {            
@@ -304,10 +297,6 @@ DWORD WINAPI CCommandWindow::_ThreadProc(__in LPVOID lpParameter)
         if (SUCCEEDED(hr))
         {
             hr = pCommandWindow->_InitInstance();
-			if (SUCCEEDED(hr))
-			{
-				//SetFocus(pCommandWindow->_hWndEdit);
-			}
         }
     }
     else
@@ -315,8 +304,6 @@ DWORD WINAPI CCommandWindow::_ThreadProc(__in LPVOID lpParameter)
         hr = HRESULT_FROM_WIN32(GetLastError());
     }
 
-    // ProcessNextMessage will pump our message pump and return false if it comes across
-    // a message telling us to exit the thread.
     if (SUCCEEDED(hr))
     {        
         while (pCommandWindow->_ProcessNextMessage()) 
