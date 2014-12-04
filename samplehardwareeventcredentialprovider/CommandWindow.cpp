@@ -12,6 +12,7 @@
 #include "CommandWindow.h"
 #include <strsafe.h>
 #include <sstream>
+#include "resource.h"
 
 // Custom messages for managing the behavior of the window thread.
 #define WM_EXIT_THREAD              WM_USER + 1
@@ -93,7 +94,7 @@ HRESULT CCommandWindow::_MyRegisterClass()
     wcex.hInstance        = _hInst;
     wcex.hIcon            = NULL;
     wcex.hCursor          = LoadCursor(NULL, IDC_ARROW);
-    wcex.hbrBackground    = (HBRUSH)(COLOR_WINDOW + 1);
+	wcex.hbrBackground    = CreatePatternBrush(LoadBitmap(_hInst, MAKEINTRESOURCE(IDB_TILE_IMAGE))); //(HBRUSH)(COLOR_WINDOW + 1);
     wcex.lpszClassName    = c_szClassName;
 
     return RegisterClassEx(&wcex) ? S_OK : HRESULT_FROM_WIN32(GetLastError());
@@ -125,7 +126,7 @@ HRESULT CCommandWindow::_InitInstance()
         c_szClassName, 
         c_szDisconnected, 
         WS_DLGFRAME,
-        CW_USEDEFAULT, 0, 300, 200, 
+        CW_USEDEFAULT, 0, 200, 267, 
         NULL,
         NULL, _hInst, NULL);
     if (_hWnd == NULL)
@@ -229,8 +230,37 @@ BOOL CCommandWindow::_ProcessNextMessage()
 // Manages window messages on the window thread.
 LRESULT CALLBACK CCommandWindow::_WndProc(__in HWND hWnd, __in UINT message, __in WPARAM wParam, __in LPARAM lParam)
 {
+	HDC hDC;
+	PAINTSTRUCT ps;
+	RECT rect;
+	// HINSTANCE hInst;
+	// static HBITMAP hBmpBackground;
+	// HDC hMemDC;
+	// static BITMAP bm;
+
     switch (message)
     {
+	/*case WM_CREATE:
+		hInst = GetModuleHandle(NULL);
+		hBmpBackground = LoadBitmap(hInst, MAKEINTRESOURCE(IDB_TILE_IMAGE));
+		GetObject(hBmpBackground, sizeof(bm), (LPWSTR)&bm);
+		break;*/
+	case WM_PAINT:
+		RECT textRect;
+
+		hDC = BeginPaint(hWnd, &ps);
+		/*hMemDC = CreateCompatibleDC(hDC);
+		SelectObject(hMemDC, hBmpBackground);
+		BitBlt(hDC, 0, 0, bm.bmWidth, bm.bmHeight, hMemDC, 0, 0, SRCCOPY);
+		DeleteDC(hMemDC);*/
+
+		GetClientRect(hWnd, &rect);
+		textRect = rect;
+		textRect.bottom -= 10;
+		DrawText(hDC, L"Проведите картой над считывателем", -1, &textRect, DT_SINGLELINE | DT_CENTER | DT_BOTTOM);
+
+		EndPaint(hWnd, &ps);
+		break;
     // Originally we were going to work with USB keys being inserted and removed, but it
     // seems as though these events don't get to us on the secure desktop. However, you
     // might see some messageboxi in CredUI.

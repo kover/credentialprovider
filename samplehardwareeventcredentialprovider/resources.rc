@@ -1,4 +1,5 @@
 #include "Resource.h"
 
-// Bitmaps:
-IDB_TILE_IMAGE      BITMAP      DISCARDABLE "tileimage.bmp" 
+// Bitmaps
+IDB_TILE_IMAGE          BITMAP                  "tileimage.bmp"
+IDB_BITMAP1             BITMAP                  "background.bmp"
