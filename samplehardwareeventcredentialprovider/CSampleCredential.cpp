@@ -69,7 +69,7 @@ HRESULT CSampleCredential::Initialize(
     // Initialize the String value of all the fields.
     if (SUCCEEDED(hr))
     {
-        hr = SHStrDupW(L"developer", &_rgFieldStrings[SFI_USERNAME]);
+        hr = SHStrDupW(L"", &_rgFieldStrings[SFI_USERNAME]);
     }
     if (SUCCEEDED(hr))
     {
@@ -254,7 +254,8 @@ HRESULT CSampleCredential::SetStringValue(
 
     if (dwFieldID < ARRAYSIZE(_rgCredProvFieldDescriptors) && 
        (CPFT_EDIT_TEXT == _rgCredProvFieldDescriptors[dwFieldID].cpft || 
-        CPFT_PASSWORD_TEXT == _rgCredProvFieldDescriptors[dwFieldID].cpft)) 
+        CPFT_PASSWORD_TEXT == _rgCredProvFieldDescriptors[dwFieldID].cpft ||
+		CPFT_LARGE_TEXT == _rgCredProvFieldDescriptors[dwFieldID].cpft))
     {
         PWSTR* ppwszStored = &_rgFieldStrings[dwFieldID];
         CoTaskMemFree(*ppwszStored);
@@ -338,6 +339,11 @@ HRESULT CSampleCredential::CommandLinkClicked(__in DWORD dwFieldID)
 }
 //------ end of methods for controls we don't have in our tile ----//
 
+void CSampleCredential::SetDomain(__in bool bInDomain) {
+	_bInDomain = bInDomain;
+}
+
+
 // Collect the username and password into a serialized credential for the correct usage scenario 
 // (logon/unlock is what's demonstrated in this sample).  LogonUI then passes these credentials 
 // back to the system to log on.
@@ -356,6 +362,7 @@ HRESULT CSampleCredential::GetSerialization(
 
     HRESULT hr;
 
+	
     WCHAR wsz[MAX_COMPUTERNAME_LENGTH+1];
     DWORD cch = ARRAYSIZE(wsz);
     if (GetComputerNameW(wsz, &cch))
@@ -369,7 +376,17 @@ HRESULT CSampleCredential::GetSerialization(
             KERB_INTERACTIVE_UNLOCK_LOGON kiul;
 
             // Initialize kiul with weak references to our credential.
-            hr = KerbInteractiveUnlockLogonInit(wsz, _rgFieldStrings[SFI_USERNAME], pwzProtectedPassword, _cpus, &kiul);
+            //hr = KerbInteractiveUnlockLogonInit(wsz, _rgFieldStrings[SFI_USERNAME], pwzProtectedPassword, _cpus, &kiul);
+			
+			if (_bInDomain)
+			{
+				hr = KerbInteractiveUnlockLogonInit(L"HQ", _rgFieldStrings[SFI_USERNAME], pwzProtectedPassword, _cpus, &kiul);
+			}
+			else
+			{
+				hr = KerbInteractiveUnlockLogonInit(wsz, _rgFieldStrings[SFI_USERNAME], pwzProtectedPassword, _cpus, &kiul);
+			}
+
 
             if (SUCCEEDED(hr))
             {

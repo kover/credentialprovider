@@ -90,7 +90,11 @@ class CSampleCredential : public ICredentialProviderCredential
 
     virtual ~CSampleCredential();
 
+	void SetDomain(__in bool bInDomain);
+
   private:
+	bool								  _bInDomain;
+
     LONG                                  _cRef;
 
     CREDENTIAL_PROVIDER_USAGE_SCENARIO    _cpus; // The usage scenario for which we were enumerated.

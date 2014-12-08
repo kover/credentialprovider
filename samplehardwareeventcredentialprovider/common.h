@@ -26,6 +26,7 @@ enum SAMPLE_FIELD_ID
     SFI_USERNAME        = 1,
     SFI_PASSWORD        = 2,
     SFI_SUBMIT_BUTTON   = 3, 
+	//SFI_DOMAIN_NAME		= 4,
     SFI_NUM_FIELDS      = 4,  // Note: if new fields are added, keep NUM_FIELDS last.  This is used as a count of the number of fields
 };
 
@@ -56,7 +57,8 @@ static const FIELD_STATE_PAIR s_rgFieldStatePairs[] =
     { CPFS_DISPLAY_IN_BOTH, CPFIS_NONE },                   // SFI_TILEIMAGE
     { CPFS_DISPLAY_IN_BOTH, CPFIS_NONE },                   // SFI_USERNAME
     { CPFS_DISPLAY_IN_SELECTED_TILE, CPFIS_FOCUSED },       // SFI_PASSWORD
-    { CPFS_DISPLAY_IN_SELECTED_TILE, CPFIS_NONE    },       // SFI_SUBMIT_BUTTON   
+    { CPFS_DISPLAY_IN_SELECTED_TILE, CPFIS_NONE    },       // SFI_SUBMIT_BUTTON 
+	//{ CPFS_DISPLAY_IN_BOTH, CPFIS_NONE },					// SFI_DOMAIN_NAME
 };
 
 // Same as s_rgFieldStatePairs above, but for the CMessageCredential.
@@ -75,6 +77,7 @@ static const CREDENTIAL_PROVIDER_FIELD_DESCRIPTOR s_rgCredProvFieldDescriptors[]
     { SFI_USERNAME, CPFT_LARGE_TEXT, L"Username" },
     { SFI_PASSWORD, CPFT_PASSWORD_TEXT, L"Password" },
     { SFI_SUBMIT_BUTTON, CPFT_SUBMIT_BUTTON, L"Submit" },
+	//{ SFI_DOMAIN_NAME, CPFT_LARGE_TEXT, L"Domain" },
 };
 
 // Same as s_rgCredProvFieldDescriptors above, but for the CMessageCredential.

@@ -39,4 +39,5 @@ private:
 	WCHAR					   _lpszCardNumber[11];
 	WCHAR					   _lpszUname[32];
 	WCHAR					   _lpszUpwd[32];
+	bool					   _bInDomain;
 };

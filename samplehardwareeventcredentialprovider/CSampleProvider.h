@@ -71,7 +71,7 @@ class CSampleProvider : public ICredentialProvider
     friend HRESULT CSample_CreateInstance(__in REFIID riid, __deref_out void** ppv);
 
 public:
-	void OnConnectStatusChanged(__in WCHAR *lpszUname, __in WCHAR *lpszUpwd);
+	void OnConnectStatusChanged(__in WCHAR *lpszUname, __in WCHAR *lpszUpwd, __in bool bInDomain);
 
   protected:
     CSampleProvider();

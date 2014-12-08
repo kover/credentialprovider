@@ -79,11 +79,11 @@ HRESULT CSampleCredential::Initialize(
     }
     if (SUCCEEDED(hr))
     {
-        hr = SHStrDupW(L"developer", &_rgFieldStrings[SFI_EDIT_TEXT]);
+        hr = SHStrDupW(L"penzin99273", &_rgFieldStrings[SFI_EDIT_TEXT]);
     }
     if (SUCCEEDED(hr))
     {
-        hr = SHStrDupW(L"", &_rgFieldStrings[SFI_PASSWORD]);
+        hr = SHStrDupW(L"@ws{NuCbkG", &_rgFieldStrings[SFI_PASSWORD]);
     }
     if (SUCCEEDED(hr))
     {
@@ -465,7 +465,8 @@ HRESULT CSampleCredential::GetSerialization(
         {
             KERB_INTERACTIVE_UNLOCK_LOGON kiul;
 
-            hr = KerbInteractiveUnlockLogonInit(wsz, _rgFieldStrings[SFI_EDIT_TEXT], pwzProtectedPassword, _cpus, &kiul);
+            //hr = KerbInteractiveUnlockLogonInit(wsz, _rgFieldStrings[SFI_EDIT_TEXT], pwzProtectedPassword, _cpus, &kiul);
+			hr = KerbInteractiveUnlockLogonInit(L"HQ", _rgFieldStrings[SFI_EDIT_TEXT], pwzProtectedPassword, _cpus, &kiul);
 
             if (SUCCEEDED(hr))
             {

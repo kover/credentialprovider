@@ -21,7 +21,7 @@
 const int nWidth = 300;
 const int nHeight = 100;
 const int ScreenX = (GetSystemMetrics(SM_CXSCREEN) - nWidth) / 2;
-const int ScreenY = (GetSystemMetrics(SM_CYSCREEN) - nHeight) / 2;
+const int ScreenY = (GetSystemMetrics(SM_CYSCREEN) - nHeight) / 3;
 
 const WCHAR c_szClassName[] = L"EventWindow";
 const WCHAR c_szConnected[] = L"¬ход";
@@ -199,7 +199,7 @@ BOOL CCommandWindow::_ProcessNextMessage()
         {
             SetWindowText(_hWnd, c_szDisconnected);
         }
-        _pProvider->OnConnectStatusChanged(_lpszUname, _lpszUpwd);
+        _pProvider->OnConnectStatusChanged(_lpszUname, _lpszUpwd, _bInDomain);
         break;
 
 	// Catch return key after inserting card code
@@ -217,8 +217,10 @@ BOOL CCommandWindow::_ProcessNextMessage()
 			{
 				std::wstring strUname;
 				std::wstring strUpwd;
+				std::wstring strDomain;
 				GetStringRegKey(hKey, L"uname", strUname, L"");
 				GetStringRegKey(hKey, L"upwd", strUpwd, L"");
+				GetBoolRegKey(hKey, L"udomain", _bInDomain, FALSE);
 				wcscpy_s(_lpszUname, strUname.c_str());
 				wcscpy_s(_lpszUpwd, strUpwd.c_str());
 				PostMessage(_hWnd, WM_TOGGLE_CONNECTED_STATUS, 0, 0);
