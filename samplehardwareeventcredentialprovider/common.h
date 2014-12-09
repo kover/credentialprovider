@@ -83,5 +83,5 @@ static const CREDENTIAL_PROVIDER_FIELD_DESCRIPTOR s_rgCredProvFieldDescriptors[]
 // Same as s_rgCredProvFieldDescriptors above, but for the CMessageCredential.
 static const CREDENTIAL_PROVIDER_FIELD_DESCRIPTOR s_rgMessageCredProvFieldDescriptors[] =
 {
-    { SMFI_MESSAGE, CPFT_LARGE_TEXT, L"PleaseConnect" },
+    { SMFI_MESSAGE, CPFT_LARGE_TEXT, L"Поднесите карту" },
 };
